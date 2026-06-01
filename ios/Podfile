@@ -1,4 +1,12 @@
-# Custom Podfile with minimum deployment target set to iOS 14.0
+# Standard Flutter preamble loading podhelper.rb
+flutter_install_ios_engine_pod = true
+
+xcode_backend_path = File.expand_path('xcode_backend.sh', File.dirname(__FILE__))
+system("sh \"#{xcode_backend_path}\" bootstrap") if !File.exist?(File.join(File.dirname(__FILE__), '.symlinks', 'flutter'))
+
+load File.join(File.dirname(__FILE__), '.symlinks', 'flutter', 'ios', 'podhelper.rb')
+
+# Custom platform minimum deployment target
 platform :ios, '14.0'
 
 # CocoaPods targets start here
@@ -17,7 +25,7 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     
-    # Force all compile targets for plugins to align with iOS 14.0
+    # Align all plugin compile targets to iOS 14.0
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
     end
