@@ -1,10 +1,22 @@
 # Standard Flutter preamble loading podhelper.rb
 flutter_install_ios_engine_pod = true
 
-xcode_backend_path = File.expand_path('xcode_backend.sh', File.dirname(__FILE__))
-system("sh \"#{xcode_backend_path}\" bootstrap") if !File.exist?(File.join(File.dirname(__FILE__), '.symlinks', 'flutter'))
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
 
-load File.join(File.dirname(__FILE__), '.symlinks', 'flutter', 'ios', 'podhelper.rb')
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
 
 # Custom platform minimum deployment target
 platform :ios, '14.0'
