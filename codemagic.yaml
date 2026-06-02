@@ -23,6 +23,11 @@ workflows:
       - name: Build iOS IPA
         script: |
           flutter build ipa --no-codesign
+          mkdir -p build/ios/iphoneos/Payload
+          cp -r build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app build/ios/iphoneos/Payload
+          cd build/ios/iphoneos
+          zip -r Runner.ipa Payload
+          rm -rf Payload
       - name: Build Android APK
         script: |
           flutter build apk --release --split-per-abi
