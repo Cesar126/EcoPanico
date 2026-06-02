@@ -30,7 +30,7 @@ workflows:
           rm -rf Payload
       - name: Build Android APK
         script: |
-          flutter build apk --release
+          flutter build apk --release --split-per-abi
     artifacts:
       - build/app/outputs/flutter-apk/*-release.apk
       - build/ios/iphoneos/*.ipa
