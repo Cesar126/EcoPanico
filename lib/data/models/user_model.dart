@@ -10,6 +10,8 @@ class UserModel extends UserEntity {
     super.photoUrl,
     required super.role,
     super.isConnected,
+    super.latitude,
+    super.longitude,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String id) {
@@ -22,6 +24,8 @@ class UserModel extends UserEntity {
       photoUrl: map['photoUrl'],
       role: map['role'] ?? 'vecino',
       isConnected: map['isConnected'] ?? false,
+      latitude: map['latitude']?.toDouble(),
+      longitude: map['longitude']?.toDouble(),
     );
   }
 
@@ -34,6 +38,8 @@ class UserModel extends UserEntity {
       'photoUrl': photoUrl,
       'role': role,
       'isConnected': isConnected,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 
@@ -47,6 +53,8 @@ class UserModel extends UserEntity {
       photoUrl: entity.photoUrl,
       role: entity.role,
       isConnected: entity.isConnected,
+      latitude: entity.latitude,
+      longitude: entity.longitude,
     );
   }
 }

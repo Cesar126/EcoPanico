@@ -7,6 +7,8 @@ class UserEntity {
   final String? photoUrl;
   final String role; // 'vecino' or 'admin'
   final bool isConnected;
+  final double? latitude;
+  final double? longitude;
 
   const UserEntity({
     required this.id,
@@ -17,6 +19,8 @@ class UserEntity {
     this.photoUrl,
     required this.role,
     this.isConnected = true,
+    this.latitude,
+    this.longitude,
   });
 
   bool get isAdmin => role == 'admin';
@@ -30,6 +34,8 @@ class UserEntity {
     String? photoUrl,
     String? role,
     bool? isConnected,
+    double? latitude,
+    double? longitude,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -40,6 +46,8 @@ class UserEntity {
       photoUrl: photoUrl ?? this.photoUrl,
       role: role ?? this.role,
       isConnected: isConnected ?? this.isConnected,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
     );
   }
 }

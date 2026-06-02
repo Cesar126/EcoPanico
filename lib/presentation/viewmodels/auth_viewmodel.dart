@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../domain/entities/user_entity.dart';
 import '../providers/usecase_providers.dart';
 import '../providers/repository_providers.dart';
@@ -84,6 +85,28 @@ class AuthViewModel extends Notifier<AuthState> {
     String? photoUrl,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
+    
+    double? lat;
+    double? lng;
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+        final position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 4),
+          ),
+        );
+        lat = position.latitude;
+        lng = position.longitude;
+      }
+    } catch (_) {
+      // Fallback: let user register anyway if location services fail or are denied
+    }
+
     try {
       final userEntity = UserEntity(
         id: '',
@@ -93,6 +116,8 @@ class AuthViewModel extends Notifier<AuthState> {
         houseNumber: houseNumber,
         photoUrl: photoUrl,
         role: 'vecino',
+        latitude: lat,
+        longitude: lng,
       );
       final user = await ref.read(registerUseCaseProvider).call(userEntity, email, password);
       state = state.copyWith(user: user, isEmailVerified: false, isLoading: false);
