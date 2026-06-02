@@ -19,7 +19,7 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 flutter_ios_podfile_setup
 
 # Custom platform minimum deployment target
-platform :ios, '14.0'
+platform :ios, '15.0'
 
 # CocoaPods targets start here
 target 'Runner' do
@@ -37,9 +37,9 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     
-    # Align all plugin compile targets to iOS 14.0
+    # Align all plugin compile targets to iOS 15.0
     target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
     end
   end
 end
