@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/config/app_colors.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/chat_viewmodel.dart';
@@ -16,12 +17,32 @@ class ChatPage extends ConsumerStatefulWidget {
 class _ChatPageState extends ConsumerState<ChatPage> {
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAndSendMedia(bool isVideo) async {
+    try {
+      final XFile? media = isVideo 
+          ? await _picker.pickVideo(source: ImageSource.gallery)
+          : await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+      
+      if (media != null) {
+        await ref.read(chatViewModelProvider.notifier).sendMediaFile(media.path, isVideo);
+        _scrollToBottom();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al seleccionar archivo: $e')),
+        );
+      }
+    }
   }
 
   void _sendMessage() {
@@ -85,9 +106,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       color: AppColors.success,
                       onTap: () {
                         Navigator.pop(context);
-                        // Trigger simulated upload
-                        ref.read(chatViewModelProvider.notifier).sendMediaFile('mock_photo.png', false);
-                        _scrollToBottom();
+                        _pickAndSendMedia(false);
                       },
                     ),
                     // Video attachment button
@@ -97,9 +116,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       color: AppColors.alert,
                       onTap: () {
                         Navigator.pop(context);
-                        // Trigger simulated upload
-                        ref.read(chatViewModelProvider.notifier).sendMediaFile('mock_video.mp4', true);
-                        _scrollToBottom();
+                        _pickAndSendMedia(true);
                       },
                     ),
                   ],
