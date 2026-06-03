@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "47047255892",
+    "project_id": "ecopanico",
+    "storage_bucket": "ecopanico.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:47047255892:android:6461cc6380cd4524d34ac1",
+        "android_client_info": {
+          "package_name": "com.ecopanico.eco_panico"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCr8LPLFkpRWc6AY_j5kP7jbdrFo2WH1uA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
