@@ -15,7 +15,7 @@ class FeedbackService {
 
   static Future<void> playAlertSound() async {
     // Play default alert sound
-    await SystemSound.play(SystemSoundType.click);
+    await SystemSound.play(SystemSoundType.alert);
     
     // In a fully configured app, you can use the `audioplayers` package:
     // AudioPlayer().play(AssetSource('sounds/emergency_siren.mp3'));

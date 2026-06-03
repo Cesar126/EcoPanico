@@ -87,11 +87,17 @@ class AlertViewModel extends Notifier<AlertState> {
         }
       }
       
-      if (filteredAlerts.isNotEmpty && currentUser != null) {
-        final newest = filteredAlerts.first;
-        final alreadyHasAlert = state.activeAlerts.any((a) => a.id == newest.id);
-        if (!alreadyHasAlert && newest.neighborId != currentUser.id) {
-          _triggerCommunityNotificationEffects();
+      // Find new alerts that were not in the previous active list
+      final previousIds = state.activeAlerts.map((a) => a.id).toSet();
+      final newAlerts = filteredAlerts.where((a) => !previousIds.contains(a.id)).toList();
+
+      if (currentUser != null && newAlerts.isNotEmpty) {
+        for (final alert in newAlerts) {
+          final age = DateTime.now().difference(alert.timestamp);
+          if (alert.neighborId != currentUser.id && alert.status == 'activa' && age.inSeconds < 60) {
+            _triggerCommunityNotificationEffects();
+            break; // Trigger once per batch
+          }
         }
       }
 
