@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:geolocator/geolocator.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'mock_user_repository.dart';
@@ -73,16 +74,40 @@ class MockAuthRepository implements AuthRepository {
         throw Exception('Contraseña incorrecta');
       }
     } else {
-      // Fallback neighbor user for any other email to retain quick-test behavior
+      // Get real GPS position if possible for fallback user
+      double? lat;
+      double? lng;
+      try {
+        final position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 2),
+          ),
+        );
+        lat = position.latitude;
+        lng = position.longitude;
+      } catch (_) {
+        lat = -2.1432;
+        lng = -79.9015;
+      }
+
+      // Generate a dynamic name from email to avoid hardcoding Juan Pérez
+      final emailName = normalizedEmail.split('@').first;
+      final capitalizedName = emailName.isNotEmpty
+          ? emailName[0].toUpperCase() + emailName.substring(1)
+          : 'Vecino';
+
       final newUser = UserEntity(
-        id: 'vecino_123',
-        fullName: 'Juan Pérez',
+        id: 'vecino_${DateTime.now().millisecondsSinceEpoch}',
+        fullName: capitalizedName,
         phone: '+593 98 765 4321',
         address: 'Av. Las Palmas y Los Cedros',
-        houseNumber: 'Vivienda 42',
+        houseNumber: 'Vivienda ${10 + (DateTime.now().second % 90)}',
         photoUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
         role: 'vecino',
         isConnected: true,
+        latitude: lat,
+        longitude: lng,
       );
       _registeredUsers[normalizedEmail] = MockUserCredentials(
         user: newUser,

@@ -89,15 +89,19 @@ class _MapPageState extends ConsumerState<MapPage> {
     final alertState = ref.watch(alertViewModelProvider);
     final isMock = ref.watch(mockModeStateProvider);
 
-    // If mock mode is active, we render our high-end vector InteractiveMockMap
-    if (isMock) {
-      return Scaffold(
-        backgroundColor: const Color(0xff121212), // Premium dark theme map background
-        appBar: AppBar(
-          title: const Text('Mapa Sector Los Ceibos', style: TextStyle(fontWeight: FontWeight.bold)),
-          backgroundColor: Colors.white,
-          elevation: 1,
-          actions: [
+    // Otherwise, render standard Google Maps
+    _updateGoogleMapMarkersAndRoutes(alertState);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          isMock ? 'Mapa Comunitario (Demo)' : 'Mapa Comunitario (Live)',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        actions: [
+          if (isMock)
             Container(
               margin: const EdgeInsets.only(right: 16),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -113,29 +117,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                 ],
               ),
             ),
-          ],
-        ),
-        body: InteractiveMockMap(
-          activeAlerts: alertState.activeAlerts,
-          ownAlert: alertState.currentOwnAlert,
-          onAttendAlert: (id) {
-            ref.read(alertViewModelProvider.notifier).attendAlert(id);
-          },
-          onResolveAlert: (id) {
-            ref.read(alertViewModelProvider.notifier).resolveAlert(id);
-          },
-        ),
-      );
-    }
-
-    // Otherwise, render standard Google Maps
-    _updateGoogleMapMarkersAndRoutes(alertState);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mapa Comunitario (Live)'),
-        backgroundColor: Colors.white,
-        elevation: 1,
+        ],
       ),
       body: Stack(
         children: [
