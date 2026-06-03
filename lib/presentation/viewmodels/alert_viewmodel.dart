@@ -63,29 +63,60 @@ class AlertViewModel extends Notifier<AlertState> {
   AlertState build() {
     // 1. Listen to active alerts
     _activeAlertsSub = ref.read(getActiveAlertsUseCaseProvider).call().listen((alerts) {
+      final currentUser = ref.read(authViewModelProvider).user;
+
+      // Filter active alerts to 200m range
+      final filteredAlerts = alerts.where((alert) {
+        if (currentUser == null || currentUser.latitude == null || currentUser.longitude == null) {
+          return true;
+        }
+        final distance = Geolocator.distanceBetween(
+          currentUser.latitude!,
+          currentUser.longitude!,
+          alert.latitude,
+          alert.longitude,
+        );
+        return distance <= 200.0;
+      }).toList();
+
       if (state.currentOwnAlert != null) {
-        final matchedOwn = alerts.where((a) => a.id == state.currentOwnAlert!.id);
+        final matchedOwn = filteredAlerts.where((a) => a.id == state.currentOwnAlert!.id);
         if (matchedOwn.isEmpty) {
           _stopLocationTracking();
           state = state.copyWith(clearOwnAlert: true);
         }
       }
       
-      final currentAuthUser = ref.read(authViewModelProvider).user;
-      if (alerts.isNotEmpty && currentAuthUser != null) {
-        final newest = alerts.first;
+      if (filteredAlerts.isNotEmpty && currentUser != null) {
+        final newest = filteredAlerts.first;
         final alreadyHasAlert = state.activeAlerts.any((a) => a.id == newest.id);
-        if (!alreadyHasAlert && newest.neighborId != currentAuthUser.id) {
+        if (!alreadyHasAlert && newest.neighborId != currentUser.id) {
           _triggerCommunityNotificationEffects();
         }
       }
 
-      state = state.copyWith(activeAlerts: alerts);
+      state = state.copyWith(activeAlerts: filteredAlerts);
     });
 
     // 2. Listen to alerts history
     _alertsHistorySub = ref.read(getAlertsHistoryUseCaseProvider).call().listen((history) {
-      state = state.copyWith(alertsHistory: history);
+      final currentUser = ref.read(authViewModelProvider).user;
+
+      // Filter alerts history to 200m range
+      final filteredHistory = history.where((alert) {
+        if (currentUser == null || currentUser.latitude == null || currentUser.longitude == null) {
+          return true;
+        }
+        final distance = Geolocator.distanceBetween(
+          currentUser.latitude!,
+          currentUser.longitude!,
+          alert.latitude,
+          alert.longitude,
+        );
+        return distance <= 200.0;
+      }).toList();
+
+      state = state.copyWith(alertsHistory: filteredHistory);
     });
 
     // 3. Listen to online neighbors count

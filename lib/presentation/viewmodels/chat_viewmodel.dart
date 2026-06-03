@@ -38,7 +38,24 @@ class ChatViewModel extends Notifier<ChatState> {
   ChatState build() {
     state = ChatState(isLoading: true);
     _chatSubscription = ref.read(getMessagesUseCaseProvider).call().listen((messages) {
-      state = state.copyWith(messages: messages, isLoading: false);
+      final currentUser = ref.read(authViewModelProvider).user;
+      final filtered = messages.where((msg) {
+        if (currentUser == null || currentUser.latitude == null || currentUser.longitude == null) {
+          return true; // fallback: show all if user has no position set
+        }
+        if (msg.latitude == null || msg.longitude == null) {
+          return true; // legacy or fallback message (show it)
+        }
+        final distance = Geolocator.distanceBetween(
+          currentUser.latitude!,
+          currentUser.longitude!,
+          msg.latitude!,
+          msg.longitude!,
+        );
+        return distance <= 200.0; // Filter messages to 200m range (sector)
+      }).toList();
+
+      state = state.copyWith(messages: filtered, isLoading: false);
     }, onError: (err) {
       state = state.copyWith(errorMessage: err.toString(), isLoading: false);
     });
@@ -62,6 +79,8 @@ class ChatViewModel extends Notifier<ChatState> {
       senderName: user.fullName,
       messageText: text,
       timestamp: DateTime.now(),
+      latitude: user.latitude,
+      longitude: user.longitude,
     );
 
     try {
@@ -129,6 +148,8 @@ class ChatViewModel extends Notifier<ChatState> {
         timestamp: DateTime.now(),
         photoUrl: isVideo ? null : downloadUrl,
         videoUrl: isVideo ? downloadUrl : null,
+        latitude: user.latitude,
+        longitude: user.longitude,
       );
 
       await ref.read(sendMessageUseCaseProvider).call(msg);

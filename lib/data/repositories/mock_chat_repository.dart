@@ -1,6 +1,7 @@
 import 'dart:async';
 import '../../domain/entities/message_entity.dart';
 import '../../domain/repositories/chat_repository.dart';
+import 'mock_auth_repository.dart';
 
 class MockChatRepository implements ChatRepository {
   static final List<MessageEntity> _mockMessages = [
@@ -40,17 +41,59 @@ class MockChatRepository implements ChatRepository {
       StreamController<List<MessageEntity>>.broadcast();
 
   MockChatRepository() {
-    _chatController.add(List.from(_mockMessages));
+    _getRelativeMessages().then((list) => _chatController.add(list));
+  }
+
+  Future<List<MessageEntity>> _getRelativeMessages() async {
+    final user = await MockAuthRepository().getCurrentUser();
+    // Default fallback coordinates if no user is found
+    final double baseLat = user?.latitude ?? -2.1432;
+    final double baseLng = user?.longitude ?? -79.9015;
+
+    return _mockMessages.map((msg) {
+      if (msg.latitude == null || msg.longitude == null) {
+        double offsetLat = 0.0;
+        double offsetLng = 0.0;
+        if (msg.id == 'msg_1') {
+          offsetLat = 0.0003;
+          offsetLng = -0.0002;
+        } else if (msg.id == 'msg_2') {
+          offsetLat = -0.0002;
+          offsetLng = 0.0004;
+        } else if (msg.id == 'msg_4') {
+          offsetLat = 0.0001;
+          offsetLng = 0.0001;
+        }
+        return msg.copyWith(
+          latitude: baseLat + offsetLat,
+          longitude: baseLng + offsetLng,
+        );
+      } else {
+        if (msg.id == 'msg_3') {
+          return msg.copyWith(
+            latitude: baseLat,
+            longitude: baseLng,
+          );
+        }
+        return msg;
+      }
+    }).toList();
   }
 
   @override
   Stream<List<MessageEntity>> getMessages() {
     final controller = StreamController<List<MessageEntity>>();
-    controller.add(List.from(_mockMessages));
-
-    final timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    
+    _getRelativeMessages().then((list) {
       if (!controller.isClosed) {
-        controller.add(List.from(_mockMessages));
+        controller.add(list);
+      }
+    });
+
+    final timer = Timer.periodic(const Duration(seconds: 1), (_) async {
+      if (!controller.isClosed) {
+        final list = await _getRelativeMessages();
+        controller.add(list);
       }
     });
 
@@ -62,20 +105,29 @@ class MockChatRepository implements ChatRepository {
   Future<void> sendMessage(MessageEntity message) async {
     await Future.delayed(const Duration(milliseconds: 300));
     _mockMessages.add(message);
-    _chatController.add(List.from(_mockMessages));
+    
+    final relativeList = await _getRelativeMessages();
+    _chatController.add(relativeList);
 
     // Simulate community responses to user messages
-    if (message.senderId == 'vecino_123') { // User is logged in as vecino_123
-      Timer(const Duration(seconds: 4), () {
+    if (message.senderId.startsWith('new_user_') || message.senderId == 'vecino_123' || message.senderId.startsWith('vecino_')) {
+      Timer(const Duration(seconds: 4), () async {
+        final user = await MockAuthRepository().getCurrentUser();
+        final double baseLat = user?.latitude ?? -2.1432;
+        final double baseLng = user?.longitude ?? -79.9015;
+
         final reply = MessageEntity(
           id: 'reply_${DateTime.now().millisecondsSinceEpoch}',
           senderId: 'vecino_4',
           senderName: 'Ana Luisa Beltrán',
           messageText: '¡Copiado! Estoy alerta desde mi ventana.',
           timestamp: DateTime.now(),
+          latitude: baseLat + 0.0005, // within 200m
+          longitude: baseLng - 0.0005,
         );
         _mockMessages.add(reply);
-        _chatController.add(List.from(_mockMessages));
+        final list = await _getRelativeMessages();
+        _chatController.add(list);
       });
     }
   }

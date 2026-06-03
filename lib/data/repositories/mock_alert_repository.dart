@@ -1,6 +1,7 @@
 import 'dart:async';
 import '../../domain/entities/alert_entity.dart';
 import '../../domain/repositories/alert_repository.dart';
+import 'mock_auth_repository.dart';
 
 class MockAlertRepository implements AlertRepository {
   static final List<AlertEntity> _mockAlerts = [
@@ -51,18 +52,55 @@ class MockAlertRepository implements AlertRepository {
       StreamController<List<AlertEntity>>.broadcast();
 
   MockAlertRepository() {
-    _alertsController.add(List.from(_mockAlerts));
+    _getRelativeAlerts().then((list) => _alertsController.add(list));
+  }
+
+  Future<List<AlertEntity>> _getRelativeAlerts() async {
+    final user = await MockAuthRepository().getCurrentUser();
+    // Default fallback coordinates if no user is found
+    final double baseLat = user?.latitude ?? -2.1432;
+    final double baseLng = user?.longitude ?? -79.9015;
+
+    return _mockAlerts.map((alert) {
+      if (alert.id == 'alert_1' || alert.id == 'alert_2' || alert.id == 'alert_3') {
+        double offsetLat = 0.0;
+        double offsetLng = 0.0;
+        if (alert.id == 'alert_1') {
+          // active alert, e.g. 50m away
+          offsetLat = 0.0003;
+          offsetLng = -0.0002;
+        } else if (alert.id == 'alert_2') {
+          // resolved alert, a bit further away (e.g. 150m)
+          offsetLat = -0.0008;
+          offsetLng = 0.0007;
+        } else if (alert.id == 'alert_3') {
+          // resolved alert, near user (e.g. 80m)
+          offsetLat = 0.0004;
+          offsetLng = 0.0004;
+        }
+        return alert.copyWith(
+          latitude: baseLat + offsetLat,
+          longitude: baseLng + offsetLng,
+        );
+      }
+      return alert;
+    }).toList();
   }
 
   @override
   Stream<List<AlertEntity>> getActiveAlerts() {
-    // Return a stream that updates when the list changes
     final controller = StreamController<List<AlertEntity>>();
-    controller.add(_mockAlerts.where((a) => a.status == 'activa' || a.status == 'en_atencion').toList());
-
-    final timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    
+    _getRelativeAlerts().then((relativeAlerts) {
       if (!controller.isClosed) {
-        controller.add(_mockAlerts.where((a) => a.status == 'activa' || a.status == 'en_atencion').toList());
+        controller.add(relativeAlerts.where((a) => a.status == 'activa' || a.status == 'en_atencion').toList());
+      }
+    });
+
+    final timer = Timer.periodic(const Duration(seconds: 1), (_) async {
+      if (!controller.isClosed) {
+        final relativeAlerts = await _getRelativeAlerts();
+        controller.add(relativeAlerts.where((a) => a.status == 'activa' || a.status == 'en_atencion').toList());
       }
     });
 
@@ -73,11 +111,17 @@ class MockAlertRepository implements AlertRepository {
   @override
   Stream<List<AlertEntity>> getAlertsHistory() {
     final controller = StreamController<List<AlertEntity>>();
-    controller.add(List.from(_mockAlerts));
-
-    final timer = Timer.periodic(const Duration(seconds: 2), (_) {
+    
+    _getRelativeAlerts().then((relativeAlerts) {
       if (!controller.isClosed) {
-        controller.add(List.from(_mockAlerts));
+        controller.add(relativeAlerts);
+      }
+    });
+
+    final timer = Timer.periodic(const Duration(seconds: 2), (_) async {
+      if (!controller.isClosed) {
+        final relativeAlerts = await _getRelativeAlerts();
+        controller.add(relativeAlerts);
       }
     });
 
@@ -89,12 +133,13 @@ class MockAlertRepository implements AlertRepository {
   Future<void> emitAlert(AlertEntity alert) async {
     await Future.delayed(const Duration(milliseconds: 500));
     _mockAlerts.insert(0, alert);
-    _alertsController.add(List.from(_mockAlerts));
+    final relativeList = await _getRelativeAlerts();
+    _alertsController.add(relativeList);
     
-    // Simulate real-time tracking: if the emitted alert is a robbery/shake, let's slightly adjust the coordinates every 5 seconds to simulate movement
+    // Simulate real-time tracking: slightly adjust coordinates if it's critical
     if (alert.isCritical) {
       int ticks = 0;
-      Timer.periodic(const Duration(seconds: 5), (timer) {
+      Timer.periodic(const Duration(seconds: 5), (timer) async {
         final index = _mockAlerts.indexWhere((a) => a.id == alert.id);
         if (index == -1 || _mockAlerts[index].status == 'resuelta' || ticks > 12) {
           timer.cancel();
@@ -102,12 +147,12 @@ class MockAlertRepository implements AlertRepository {
         }
         ticks++;
         final currentAlert = _mockAlerts[index];
-        // Move slightly North-West
         _mockAlerts[index] = currentAlert.copyWith(
           latitude: currentAlert.latitude + 0.0001,
           longitude: currentAlert.longitude - 0.0001,
         );
-        _alertsController.add(List.from(_mockAlerts));
+        final list = await _getRelativeAlerts();
+        _alertsController.add(list);
       });
     }
   }
@@ -121,7 +166,8 @@ class MockAlertRepository implements AlertRepository {
         status: newStatus,
         resolvedBy: resolvedBy,
       );
-      _alertsController.add(List.from(_mockAlerts));
+      final list = await _getRelativeAlerts();
+      _alertsController.add(list);
     }
   }
 
@@ -133,18 +179,20 @@ class MockAlertRepository implements AlertRepository {
         latitude: latitude,
         longitude: longitude,
       );
-      _alertsController.add(List.from(_mockAlerts));
+      final list = await _getRelativeAlerts();
+      _alertsController.add(list);
     }
   }
 
   @override
   Stream<AlertEntity?> listenToAlert(String alertId) {
-    return Stream.periodic(const Duration(seconds: 1), (_) {
+    return Stream.periodic(const Duration(seconds: 1), (_) async {
       try {
-        return _mockAlerts.firstWhere((a) => a.id == alertId);
+        final relativeAlerts = await _getRelativeAlerts();
+        return relativeAlerts.firstWhere((a) => a.id == alertId);
       } catch (_) {
         return null;
       }
-    }).asBroadcastStream();
+    }).asyncMap((event) async => await event).asBroadcastStream();
   }
 }
