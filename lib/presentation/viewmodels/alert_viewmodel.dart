@@ -67,6 +67,11 @@ class AlertViewModel extends Notifier<AlertState> {
 
       // Filter active alerts to 200m range
       final filteredAlerts = alerts.where((alert) {
+        // ALWAYS keep the user's own active alert in the list so they can see and manage it
+        if (state.currentOwnAlert != null && alert.id == state.currentOwnAlert!.id) {
+          return true;
+        }
+
         if (currentUser == null || currentUser.latitude == null || currentUser.longitude == null) {
           return true;
         }
@@ -80,7 +85,8 @@ class AlertViewModel extends Notifier<AlertState> {
       }).toList();
 
       if (state.currentOwnAlert != null) {
-        final matchedOwn = filteredAlerts.where((a) => a.id == state.currentOwnAlert!.id);
+        // Check the unfiltered database list 'alerts' to see if the user's own alert was resolved/removed
+        final matchedOwn = alerts.where((a) => a.id == state.currentOwnAlert!.id);
         if (matchedOwn.isEmpty) {
           _stopLocationTracking();
           state = state.copyWith(clearOwnAlert: true);
