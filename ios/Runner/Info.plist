@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Esta aplicación requiere acceso a tu ubicación para reportar y coordinar alertas de emergencia con tus vecinos en tiempo real.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Esta aplicación requiere acceso continuo a tu ubicación para alertar a tus vecinos en caso de emergencias, incluso en segundo plano.</string>
 </dict>
 </plist>

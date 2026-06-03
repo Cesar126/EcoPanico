@@ -1,11 +1,48 @@
 import 'dart:async';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
+import 'mock_user_repository.dart';
+
+class MockUserCredentials {
+  final UserEntity user;
+  final String password;
+  const MockUserCredentials({required this.user, required this.password});
+}
 
 class MockAuthRepository implements AuthRepository {
   static final StreamController<UserEntity?> _authController = StreamController<UserEntity?>.broadcast();
   static UserEntity? _currentUser;
   static bool _isVerified = true;
+
+  // In-memory credentials map to simulate registered accounts
+  static final Map<String, MockUserCredentials> _registeredUsers = {
+    'admin@ecopanico.com': const MockUserCredentials(
+      user: UserEntity(
+        id: 'admin_123',
+        fullName: 'Administrador Los Ceibos',
+        phone: '+593 99 999 9999',
+        address: 'Calle de la Administración #5',
+        houseNumber: 'Vivienda 00',
+        photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+        role: 'admin',
+        isConnected: true,
+      ),
+      password: 'password123',
+    ),
+    'vecino@ecopanico.com': const MockUserCredentials(
+      user: UserEntity(
+        id: 'vecino_123',
+        fullName: 'Juan Pérez',
+        phone: '+593 98 765 4321',
+        address: 'Av. Las Palmas y Los Cedros',
+        houseNumber: 'Vivienda 42',
+        photoUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
+        role: 'vecino',
+        isConnected: true,
+      ),
+      password: 'password123',
+    ),
+  };
 
   MockAuthRepository() {
     // If not set, default to null (logged out)
@@ -24,20 +61,20 @@ class MockAuthRepository implements AuthRepository {
   Future<UserEntity?> login(String email, String password) async {
     await Future.delayed(const Duration(milliseconds: 1000)); // Simulate network latency
 
-    if (email == 'admin@ecopanico.com') {
-      _currentUser = const UserEntity(
-        id: 'admin_123',
-        fullName: 'Administrador Los Ceibos',
-        phone: '+593 99 999 9999',
-        address: 'Calle de la Administración #5',
-        houseNumber: 'Vivienda 00',
-        photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-        role: 'admin',
-        isConnected: true,
-      );
+    final normalizedEmail = email.toLowerCase().trim();
+    if (_registeredUsers.containsKey(normalizedEmail)) {
+      final creds = _registeredUsers[normalizedEmail]!;
+      if (creds.password == password) {
+        _currentUser = creds.user;
+        _isVerified = true; // Mark as verified upon successful login
+        _authController.add(_currentUser);
+        return _currentUser;
+      } else {
+        throw Exception('Contraseña incorrecta');
+      }
     } else {
-      // Default neighbor user
-      _currentUser = UserEntity(
+      // Fallback neighbor user for any other email to retain quick-test behavior
+      final newUser = UserEntity(
         id: 'vecino_123',
         fullName: 'Juan Pérez',
         phone: '+593 98 765 4321',
@@ -47,16 +84,33 @@ class MockAuthRepository implements AuthRepository {
         role: 'vecino',
         isConnected: true,
       );
+      _registeredUsers[normalizedEmail] = MockUserCredentials(
+        user: newUser,
+        password: password,
+      );
+      // Register in list of users
+      MockUserRepository.addMockUser(newUser);
+      _currentUser = newUser;
+      _isVerified = true;
+      _authController.add(_currentUser);
+      return _currentUser;
     }
-    _isVerified = true;
-    _authController.add(_currentUser);
-    return _currentUser;
   }
 
   @override
   Future<UserEntity?> register(UserEntity user, String email, String password) async {
     await Future.delayed(const Duration(milliseconds: 1200));
-    _currentUser = user.copyWith(id: 'new_user_${DateTime.now().millisecondsSinceEpoch}');
+    final registeredUser = user.copyWith(
+      id: 'new_user_${DateTime.now().millisecondsSinceEpoch}',
+    );
+    _registeredUsers[email.toLowerCase().trim()] = MockUserCredentials(
+      user: registeredUser,
+      password: password,
+    );
+    // Add to user repository list so it shows in dashboard
+    MockUserRepository.addMockUser(registeredUser);
+    
+    _currentUser = registeredUser;
     _isVerified = false; // Registration requires verification
     _authController.add(_currentUser);
     return _currentUser;

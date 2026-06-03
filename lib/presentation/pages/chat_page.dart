@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -266,16 +267,25 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   if (msg.photoUrl != null) ...[
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        msg.photoUrl!,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, progress) => progress == null
-                            ? child
-                            : const SizedBox(
+                      child: msg.photoUrl!.startsWith('http')
+                          ? Image.network(
+                              msg.photoUrl!,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (context, child, progress) => progress == null
+                                  ? child
+                                  : const SizedBox(
+                                      height: 150,
+                                      child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                                    ),
+                            )
+                          : Image.file(
+                              File(msg.photoUrl!),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => const SizedBox(
                                 height: 150,
-                                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                                child: Center(child: Icon(Icons.broken_image, color: Colors.grey)),
                               ),
-                      ),
+                            ),
                     ),
                     const SizedBox(height: 8),
                   ],

@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../core/config/app_colors.dart';
 import '../viewmodels/alert_viewmodel.dart';
 import '../../domain/entities/alert_entity.dart';
@@ -19,6 +21,68 @@ class _MapPageState extends ConsumerState<MapPage> {
   // Set of markers and polylines for the real Google Maps
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {};
+
+  GoogleMapController? _mapController;
+  Position? _currentPosition;
+  StreamSubscription<Position>? _positionSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _startLocationTracking();
+  }
+
+  @override
+  void dispose() {
+    _positionSubscription?.cancel();
+    _mapController?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _startLocationTracking() async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+        final pos = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        );
+        if (mounted) {
+          setState(() {
+            _currentPosition = pos;
+          });
+          _animateToCurrentPosition();
+        }
+
+        _positionSubscription = Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 10,
+          ),
+        ).listen((Position position) {
+          if (mounted) {
+            setState(() {
+              _currentPosition = position;
+            });
+            _animateToCurrentPosition();
+          }
+        });
+      }
+    } catch (_) {}
+  }
+
+  void _animateToCurrentPosition() {
+    if (_mapController != null && _currentPosition != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLng(
+          LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,9 +140,14 @@ class _MapPageState extends ConsumerState<MapPage> {
       body: Stack(
         children: [
           GoogleMap(
-            onMapCreated: (controller) {},
+            onMapCreated: (controller) {
+              _mapController = controller;
+              _animateToCurrentPosition();
+            },
             initialCameraPosition: CameraPosition(
-              target: _center,
+              target: _currentPosition != null
+                  ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
+                  : _center,
               zoom: 15.5,
             ),
             markers: _markers,
@@ -121,6 +190,10 @@ class _MapPageState extends ConsumerState<MapPage> {
     _markers.clear();
     _polylines.clear();
 
+    final userLatLng = _currentPosition != null
+        ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
+        : _center;
+
     // Draw markers for alerts
     for (final alert in state.activeAlerts) {
       final isRobbery = alert.type == 'robo';
@@ -143,12 +216,12 @@ class _MapPageState extends ConsumerState<MapPage> {
         ),
       );
 
-      // Draw polyline route from center (user coordinate approximation) to the alert
+      // Draw polyline route from current user coordinate to the alert
       _polylines.add(
         Polyline(
           polylineId: PolylineId('route_${alert.id}'),
           points: [
-            LatLng(_center.latitude, _center.longitude),
+            userLatLng,
             LatLng(alert.latitude, alert.longitude),
           ],
           color: isRobbery || isShake ? AppColors.alert : AppColors.warning,

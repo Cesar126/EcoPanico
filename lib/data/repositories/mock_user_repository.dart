@@ -56,6 +56,13 @@ class MockUserRepository implements UserRepository {
     ),
   ];
 
+  static void addMockUser(UserEntity user) {
+    if (!_mockUsers.any((u) => u.id == user.id)) {
+      _mockUsers.add(user);
+      _usersController.add(List.from(_mockUsers));
+    }
+  }
+
   static final StreamController<List<UserEntity>> _usersController =
       StreamController<List<UserEntity>>.broadcast();
 

@@ -83,7 +83,6 @@ class MockChatRepository implements ChatRepository {
   @override
   Future<String> uploadMedia(String filePath, String folderName) async {
     await Future.delayed(const Duration(milliseconds: 1000));
-    // Return a beautiful mock placeholder image or mock video link
-    return 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?auto=format&fit=crop&w=400&q=80';
+    return filePath;
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/config/app_colors.dart';
@@ -116,7 +117,11 @@ class ProfilePage extends ConsumerWidget {
             CircleAvatar(
               radius: 50,
               backgroundColor: AppColors.surface,
-              backgroundImage: user?.photoUrl != null ? NetworkImage(user!.photoUrl!) : null,
+              backgroundImage: user?.photoUrl != null
+                  ? (user!.photoUrl!.startsWith('http')
+                      ? NetworkImage(user.photoUrl!)
+                      : FileImage(File(user.photoUrl!)) as ImageProvider)
+                  : null,
               child: user?.photoUrl == null
                   ? const Icon(Icons.person, size: 50, color: AppColors.secondary)
                   : null,
