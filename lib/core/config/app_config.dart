@@ -6,6 +6,9 @@ class AppConfig {
   // Keep track of whether Firebase was successfully initialized
   static bool firebaseInitialized = false;
 
+  // Set this to false to bypass email verification in Live (Firebase) Mode for easier testing/demos.
+  static bool requireEmailVerification = false;
+
   // Preferences Keys
   static const String keyUseMock = 'use_mock_data';
   static const String keyVibrationEnabled = 'vibration_enabled';

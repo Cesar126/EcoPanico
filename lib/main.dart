@@ -124,7 +124,7 @@ class _AuthSwitcherState extends ConsumerState<AuthSwitcher> {
       return const LoginPage();
     }
 
-    if (!authState.isEmailVerified) {
+    if (AppConfig.requireEmailVerification && !authState.isEmailVerified) {
       return const EmailVerificationPage();
     }
 

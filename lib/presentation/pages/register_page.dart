@@ -90,13 +90,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     );
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       final String finalCommunity = _selectedCommunity == 'Otro / Personalizado'
           ? _customCommunityController.text.trim()
           : _selectedCommunity;
 
-      ref.read(authViewModelProvider.notifier).register(
+      await ref.read(authViewModelProvider.notifier).register(
             fullName: _nameController.text.trim(),
             phone: _phoneController.text.trim(),
             address: _addressController.text.trim(),
@@ -107,14 +107,33 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             community: finalCommunity.isEmpty ? 'Los Ceibos' : finalCommunity,
           );
       
-      // Navigate back on successful registration (the auth flow switch handles routing)
-      Navigator.pop(context);
+      final authState = ref.read(authViewModelProvider);
+      if (authState.errorMessage == null && authState.user != null) {
+        if (mounted) {
+          // Navigate back on successful registration
+          Navigator.pop(context);
+        }
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
+
+    // Listen to authentication errors to display them
+    ref.listen<AuthState>(authViewModelProvider, (prev, next) {
+      if (next.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: AppColors.alert,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        ref.read(authViewModelProvider.notifier).clearError();
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.surface,

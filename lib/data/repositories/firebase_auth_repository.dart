@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../models/user_model.dart';
+import '../../core/config/app_config.dart';
 
 class FirebaseAuthRepository implements AuthRepository {
   final fb.FirebaseAuth _firebaseAuth = fb.FirebaseAuth.instance;
@@ -73,8 +74,14 @@ class FirebaseAuthRepository implements AuthRepository {
     final userModel = UserModel.fromEntity(user.copyWith(id: fbUser.uid));
     await _firestore.collection('usuarios').doc(fbUser.uid).set(userModel.toMap());
 
-    // Send email verification
-    await fbUser.sendEmailVerification();
+    // Send email verification safely if required
+    if (AppConfig.requireEmailVerification) {
+      try {
+        await fbUser.sendEmailVerification();
+      } catch (_) {
+        // Safe fallback
+      }
+    }
 
     return userModel;
   }
