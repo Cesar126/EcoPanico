@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'core/config/app_colors.dart';
 import 'core/config/app_config.dart';
 import 'presentation/providers/repository_providers.dart';
@@ -15,13 +17,24 @@ import 'presentation/pages/home_shell.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Pre-initialize SharedPreferences to load mock configuration
+  SharedPreferences? prefs;
+  try {
+    prefs = await SharedPreferences.getInstance();
+  } catch (e) {
+    debugPrint('⚠️ Error al inicializar SharedPreferences: $e');
+  }
+
   // Try to initialize Firebase safely
   try {
     // If google-services.json / GoogleService-Info.plist are missing,
     // this will throw an exception, which we catch to fallback to Mock Mode.
     await Firebase.initializeApp();
-    AppConfig.useMockData = false;
-    debugPrint('🎉 Firebase inicializado exitosamente. Modo Live activo.');
+    
+    // If successfully initialized, default mock mode to false unless user explicitly turned it on.
+    final savedMock = prefs?.getBool(AppConfig.keyUseMock);
+    AppConfig.useMockData = savedMock ?? false;
+    debugPrint('🎉 Firebase inicializado exitosamente. Modo Live activo: ${!AppConfig.useMockData}');
   } catch (e) {
     debugPrint('⚠️ Error al inicializar Firebase: $e');
     debugPrint('⚙️ Configuración de Firebase no encontrada. Iniciando en Modo Demo/Mock.');

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/config/app_config.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/user_repository.dart';
@@ -24,8 +25,15 @@ class MockModeNotifier extends Notifier<bool> {
     return AppConfig.useMockData;
   }
 
-  void toggle(bool val) {
+  void toggle(bool val) async {
     state = val;
+    AppConfig.useMockData = val;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(AppConfig.keyUseMock, val);
+    } catch (_) {
+      // Fail silently if storage is not available/configured
+    }
   }
 }
 
