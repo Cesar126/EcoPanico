@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'firebase_options.dart';
 import 'core/config/app_colors.dart';
 import 'core/config/app_config.dart';
 import 'presentation/providers/repository_providers.dart';
@@ -29,13 +30,17 @@ void main() async {
   try {
     // If google-services.json / GoogleService-Info.plist are missing,
     // this will throw an exception, which we catch to fallback to Mock Mode.
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    AppConfig.firebaseInitialized = true;
     
     // If successfully initialized, default mock mode to false unless user explicitly turned it on.
     final savedMock = prefs?.getBool(AppConfig.keyUseMock);
     AppConfig.useMockData = savedMock ?? false;
     debugPrint('🎉 Firebase inicializado exitosamente. Modo Live activo: ${!AppConfig.useMockData}');
   } catch (e) {
+    AppConfig.firebaseInitialized = false;
     debugPrint('⚠️ Error al inicializar Firebase: $e');
     debugPrint('⚙️ Configuración de Firebase no encontrada. Iniciando en Modo Demo/Mock.');
     AppConfig.useMockData = true;

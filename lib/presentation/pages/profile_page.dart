@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/config/app_colors.dart';
+import '../../core/config/app_config.dart';
 import '../../domain/entities/user_entity.dart';
 import '../providers/repository_providers.dart';
 import '../viewmodels/auth_viewmodel.dart';
@@ -83,7 +84,7 @@ class ProfilePage extends ConsumerWidget {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.secondary, letterSpacing: 1),
             ),
             const SizedBox(height: 12),
-            _buildSettingsList(ref, vibration, sound, shake, isMock),
+            _buildSettingsList(context, ref, vibration, sound, shake, isMock),
             const SizedBox(height: 24),
 
             ElevatedButton.icon(
@@ -205,7 +206,7 @@ class ProfilePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildSettingsList(WidgetRef ref, bool vibration, bool sound, bool shake, bool isMock) {
+  Widget _buildSettingsList(BuildContext context, WidgetRef ref, bool vibration, bool sound, bool shake, bool isMock) {
     return Card(
       elevation: 0,
       color: Colors.white,
@@ -251,6 +252,16 @@ class ProfilePage extends ConsumerWidget {
               title: const Text('Modo Demo / Datos de Simulación', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
               subtitle: const Text('Permite simular movimiento GPS, chat y vecinos online.', style: TextStyle(fontSize: 11)),
               onChanged: (val) {
+                if (!val && !AppConfig.firebaseInitialized) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('⚠️ No se puede activar el servidor porque Firebase no se inicializó correctamente.'),
+                      backgroundColor: AppColors.alert,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  return;
+                }
                 ref.read(mockModeStateProvider.notifier).toggle(val);
               },
             ),

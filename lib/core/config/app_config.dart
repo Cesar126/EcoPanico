@@ -3,6 +3,9 @@ class AppConfig {
   // Defaults to true so the app runs out-of-the-box, but can be toggled in settings.
   static bool useMockData = true;
 
+  // Keep track of whether Firebase was successfully initialized
+  static bool firebaseInitialized = false;
+
   // Preferences Keys
   static const String keyUseMock = 'use_mock_data';
   static const String keyVibrationEnabled = 'vibration_enabled';

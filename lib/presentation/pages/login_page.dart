@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/config/app_colors.dart';
+import '../../core/config/app_config.dart';
 import '../providers/repository_providers.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'register_page.dart';
@@ -110,6 +111,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             value: mockMode,
                             activeColor: AppColors.success,
                             onChanged: (val) {
+                              if (!val && !AppConfig.firebaseInitialized) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('⚠️ No se puede activar el servidor porque Firebase no se inicializó correctamente.'),
+                                    backgroundColor: AppColors.alert,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                                return;
+                              }
                               ref.read(mockModeStateProvider.notifier).toggle(val);
                             },
                           ),
