@@ -12,6 +12,7 @@ class UserModel extends UserEntity {
     super.isConnected,
     super.latitude,
     super.longitude,
+    super.community,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String id) {
@@ -26,6 +27,7 @@ class UserModel extends UserEntity {
       isConnected: map['isConnected'] ?? false,
       latitude: map['latitude']?.toDouble(),
       longitude: map['longitude']?.toDouble(),
+      community: map['community'] ?? 'Los Ceibos',
     );
   }
 
@@ -40,6 +42,7 @@ class UserModel extends UserEntity {
       'isConnected': isConnected,
       'latitude': latitude,
       'longitude': longitude,
+      'community': community,
     };
   }
 
@@ -55,6 +58,7 @@ class UserModel extends UserEntity {
       isConnected: entity.isConnected,
       latitude: entity.latitude,
       longitude: entity.longitude,
+      community: entity.community,
     );
   }
 }

@@ -13,8 +13,8 @@ class MockAlertRepository implements AlertRepository {
       neighborHouseNumber: 'Vivienda 15',
       type: 'sospechoso',
       timestamp: DateTime.now().subtract(const Duration(minutes: 45)),
-      latitude: -2.1432,
-      longitude: -79.9015,
+      latitude: 0.33201,
+      longitude: -78.11743,
       level: 'medium',
       status: 'activa',
     ),
@@ -26,8 +26,8 @@ class MockAlertRepository implements AlertRepository {
       neighborHouseNumber: 'Vivienda 28',
       type: 'robo',
       timestamp: DateTime.now().subtract(const Duration(hours: 3)),
-      latitude: -2.1458,
-      longitude: -79.9042,
+      latitude: 0.33120,
+      longitude: -78.11920,
       level: 'critical',
       status: 'resuelta',
       resolvedBy: 'Administrador Los Ceibos',
@@ -40,8 +40,8 @@ class MockAlertRepository implements AlertRepository {
       neighborHouseNumber: 'Vivienda 104',
       type: 'shake_emergencia',
       timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      latitude: -2.1415,
-      longitude: -79.8998,
+      latitude: 0.33310,
+      longitude: -78.11520,
       level: 'critical',
       status: 'resuelta',
       resolvedBy: 'Carlos Andrade',
@@ -58,8 +58,8 @@ class MockAlertRepository implements AlertRepository {
   Future<List<AlertEntity>> _getRelativeAlerts() async {
     final user = await MockAuthRepository().getCurrentUser();
     // Default fallback coordinates if no user is found
-    final double baseLat = user?.latitude ?? -2.1432;
-    final double baseLng = user?.longitude ?? -79.9015;
+    final double baseLat = user?.latitude ?? 0.33201;
+    final double baseLng = user?.longitude ?? -78.11743;
 
     return _mockAlerts.map((alert) {
       if (alert.id == 'alert_1' || alert.id == 'alert_2' || alert.id == 'alert_3') {

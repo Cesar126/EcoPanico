@@ -83,6 +83,7 @@ class AuthViewModel extends Notifier<AuthState> {
     required String email,
     required String password,
     String? photoUrl,
+    required String community,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     
@@ -118,6 +119,7 @@ class AuthViewModel extends Notifier<AuthState> {
         role: 'vecino',
         latitude: lat,
         longitude: lng,
+        community: community,
       );
       final user = await ref.read(registerUseCaseProvider).call(userEntity, email, password);
       state = state.copyWith(user: user, isEmailVerified: false, isLoading: false);

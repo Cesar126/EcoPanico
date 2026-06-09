@@ -13,6 +13,7 @@ class MockUserRepository implements UserRepository {
       photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
       role: 'admin',
       isConnected: true,
+      community: 'Los Ceibos (Sector Central)',
     ),
     const UserEntity(
       id: 'vecino_1',
@@ -23,6 +24,7 @@ class MockUserRepository implements UserRepository {
       photoUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
       role: 'vecino',
       isConnected: true,
+      community: 'Los Ceibos (Sector Central)',
     ),
     const UserEntity(
       id: 'vecino_2',
@@ -33,6 +35,7 @@ class MockUserRepository implements UserRepository {
       photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
       role: 'vecino',
       isConnected: true,
+      community: 'Yacucalle',
     ),
     const UserEntity(
       id: 'vecino_3',
@@ -43,6 +46,7 @@ class MockUserRepository implements UserRepository {
       photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
       role: 'vecino',
       isConnected: false,
+      community: 'La Florida',
     ),
     const UserEntity(
       id: 'vecino_4',
@@ -53,6 +57,7 @@ class MockUserRepository implements UserRepository {
       photoUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80',
       role: 'vecino',
       isConnected: true,
+      community: 'Los Ceibos (Sector Polideportivo)',
     ),
   ];
 

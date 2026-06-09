@@ -135,7 +135,7 @@ class ProfilePage extends ConsumerWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Casa ${user?.houseNumber ?? "N/A"} • ${user?.phone ?? "Sin teléfono"}',
+              '${user?.community ?? "Los Ceibos"} • Casa ${user?.houseNumber ?? "N/A"} • ${user?.phone ?? "Sin teléfono"}',
               style: const TextStyle(color: AppColors.textLight, fontSize: 13),
               textAlign: TextAlign.center,
             ),

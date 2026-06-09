@@ -129,89 +129,114 @@ class AdminDashboardPage extends ConsumerWidget {
       );
     }
 
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: users.length,
-      itemBuilder: (context, index) {
-        final user = users[index];
-        final isConnected = user.isConnected;
+    // Group users by community
+    final Map<String, List<UserEntity>> groupedUsers = {};
+    for (final user in users) {
+      final comm = user.community.isEmpty ? 'Sin Comunidad' : user.community;
+      groupedUsers.putIfAbsent(comm, () => []).add(user);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: groupedUsers.entries.map((entry) {
+        final communityName = entry.key;
+        final communityUsers = entry.value;
 
         return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 0,
+          margin: const EdgeInsets.only(bottom: 20),
           color: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: ListTile(
-            leading: Stack(
-              children: [
-                CircleAvatar(
-                  backgroundColor: AppColors.surface,
-                  backgroundImage: user.photoUrl != null
-                      ? (user.photoUrl!.startsWith('http')
-                          ? NetworkImage(user.photoUrl!)
-                          : FileImage(File(user.photoUrl!)) as ImageProvider)
-                      : null,
-                  child: user.photoUrl == null ? const Icon(Icons.person, color: AppColors.secondary) : null,
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: isConnected ? AppColors.success : Colors.grey,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: ExpansionTile(
             title: Text(
-              user.fullName,
-              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark),
+              '$communityName (${communityUsers.length} vecinos)',
+              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
             ),
-            subtitle: Text(
-              'Casa ${user.houseNumber} • Rol: ${user.role.toUpperCase()}',
-              style: const TextStyle(fontSize: 12, color: AppColors.textLight),
-            ),
-            trailing: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: AppColors.secondary),
-              onSelected: (action) {
-                if (action == 'change_role') {
-                  _showRoleDialog(context, user, notifier);
-                } else if (action == 'delete') {
-                  _showDeleteConfirmDialog(context, user, notifier);
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'change_role',
-                  child: Row(
+            initiallyExpanded: true,
+            shape: const Border(), // Remove default expansion tile borders
+            collapsedShape: const Border(),
+            childrenPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            children: communityUsers.map((user) {
+              final isConnected = user.isConnected;
+
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                elevation: 0,
+                color: AppColors.surface.withOpacity(0.5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                child: ListTile(
+                  leading: Stack(
                     children: [
-                      const Icon(Icons.security, size: 18, color: AppColors.primary),
-                      const SizedBox(width: 8),
-                      Text(user.role == 'admin' ? 'Cambiar a Vecino' : 'Cambiar a Admin'),
+                      CircleAvatar(
+                        backgroundColor: Colors.white,
+                        backgroundImage: user.photoUrl != null
+                            ? (user.photoUrl!.startsWith('http')
+                                ? NetworkImage(user.photoUrl!)
+                                : FileImage(File(user.photoUrl!)) as ImageProvider)
+                            : null,
+                        child: user.photoUrl == null ? const Icon(Icons.person, color: AppColors.secondary) : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: isConnected ? AppColors.success : Colors.grey,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  title: Text(
+                    user.fullName,
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark),
+                  ),
+                  subtitle: Text(
+                    'Casa ${user.houseNumber} • Rol: ${user.role.toUpperCase()}',
+                    style: const TextStyle(fontSize: 12, color: AppColors.textLight),
+                  ),
+                  trailing: PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: AppColors.secondary),
+                    onSelected: (action) {
+                      if (action == 'change_role') {
+                        _showRoleDialog(context, user, notifier);
+                      } else if (action == 'delete') {
+                        _showDeleteConfirmDialog(context, user, notifier);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'change_role',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.security, size: 18, color: AppColors.primary),
+                            const SizedBox(width: 8),
+                            Text(user.role == 'admin' ? 'Cambiar a Vecino' : 'Cambiar a Admin'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline, size: 18, color: AppColors.alert),
+                            const SizedBox(width: 8),
+                            Text('Eliminar Usuario', style: TextStyle(color: AppColors.alert)),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete_outline, size: 18, color: AppColors.alert),
-                      const SizedBox(width: 8),
-                      Text('Eliminar Usuario', style: TextStyle(color: AppColors.alert)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              );
+            }).toList(),
           ),
         );
-      },
+      }).toList(),
     );
   }
 

@@ -222,8 +222,8 @@ class AlertViewModel extends Notifier<AlertState> {
 
     state = state.copyWith(isLoading: true, clearError: true);
     
-    double lat = -2.1430;
-    double lng = -79.9020;
+    double lat = 0.33201;
+    double lng = -78.11743;
 
     try {
       final position = await _determineGPSPosition();
@@ -232,8 +232,8 @@ class AlertViewModel extends Notifier<AlertState> {
         lng = position.longitude;
       }
     } catch (e) {
-      lat = -2.1432 + (DateTime.now().second % 10) * 0.0001; 
-      lng = -79.9015 - (DateTime.now().second % 10) * 0.0001;
+      lat = 0.33201 + (DateTime.now().second % 10) * 0.0001; 
+      lng = -78.11743 - (DateTime.now().second % 10) * 0.0001;
     }
 
     final alert = AlertEntity(
@@ -273,8 +273,8 @@ class AlertViewModel extends Notifier<AlertState> {
 
     _gpsTrackingSub = Stream.periodic(const Duration(seconds: 5)).listen((_) async {
       try {
-        double lat = -2.1430;
-        double lng = -79.9020;
+        double lat = 0.33201;
+        double lng = -78.11743;
         
         final position = await Geolocator.getCurrentPosition(
           locationSettings: const LocationSettings(

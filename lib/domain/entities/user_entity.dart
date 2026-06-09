@@ -9,6 +9,7 @@ class UserEntity {
   final bool isConnected;
   final double? latitude;
   final double? longitude;
+  final String community;
 
   const UserEntity({
     required this.id,
@@ -21,6 +22,7 @@ class UserEntity {
     this.isConnected = true,
     this.latitude,
     this.longitude,
+    this.community = 'Los Ceibos',
   });
 
   bool get isAdmin => role == 'admin';
@@ -36,6 +38,7 @@ class UserEntity {
     bool? isConnected,
     double? latitude,
     double? longitude,
+    String? community,
   }) {
     return UserEntity(
       id: id ?? this.id,
@@ -48,6 +51,7 @@ class UserEntity {
       isConnected: isConnected ?? this.isConnected,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      community: community ?? this.community,
     );
   }
 }

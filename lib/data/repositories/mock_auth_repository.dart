@@ -87,8 +87,8 @@ class MockAuthRepository implements AuthRepository {
         lat = position.latitude;
         lng = position.longitude;
       } catch (_) {
-        lat = -2.1432;
-        lng = -79.9015;
+        lat = 0.33201;
+        lng = -78.11743;
       }
 
       // Generate a dynamic name from email to avoid hardcoding Juan Pérez
@@ -108,6 +108,7 @@ class MockAuthRepository implements AuthRepository {
         isConnected: true,
         latitude: lat,
         longitude: lng,
+        community: 'Los Ceibos (Sector Central)',
       );
       _registeredUsers[normalizedEmail] = MockUserCredentials(
         user: newUser,

@@ -16,7 +16,7 @@ class MapPage extends ConsumerStatefulWidget {
 }
 
 class _MapPageState extends ConsumerState<MapPage> {
-  final LatLng _center = const LatLng(-2.1432, -79.9015); // Los Ceibos center
+  final LatLng _center = const LatLng(0.33201, -78.11743); // Los Ceibos de Ibarra center
   
   // Set of markers and polylines for the real Google Maps
   final Set<Marker> _markers = {};
@@ -501,8 +501,8 @@ class MapVectorPainter extends CustomPainter {
     for (final alert in activeAlerts) {
       // Map alert coordinates to local offset (mock scaling around center)
       // Since it's mock, we map lat/lng differences from _center to pixels
-      final double dx = (alert.longitude - (-79.9015)) * 12000 * scale;
-      final double dy = -(alert.latitude - (-2.1432)) * 12000 * scale; // invert Y for latitude
+      final double dx = (alert.longitude - (-78.11743)) * 12000 * scale;
+      final double dy = -(alert.latitude - 0.33201) * 12000 * scale; // invert Y for latitude
       
       final alertOffset = drawOffset + Offset(dx, dy);
 

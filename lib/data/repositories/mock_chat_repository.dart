@@ -25,8 +25,8 @@ class MockChatRepository implements ChatRepository {
       senderName: 'Juan Pérez',
       messageText: 'Comparto mi ubicación para estar atentos.',
       timestamp: DateTime.now().subtract(const Duration(minutes: 20)),
-      latitude: -2.1432,
-      longitude: -79.9015,
+      latitude: 0.33201,
+      longitude: -78.11743,
     ),
     MessageEntity(
       id: 'msg_4',
@@ -47,8 +47,8 @@ class MockChatRepository implements ChatRepository {
   Future<List<MessageEntity>> _getRelativeMessages() async {
     final user = await MockAuthRepository().getCurrentUser();
     // Default fallback coordinates if no user is found
-    final double baseLat = user?.latitude ?? -2.1432;
-    final double baseLng = user?.longitude ?? -79.9015;
+    final double baseLat = user?.latitude ?? 0.33201;
+    final double baseLng = user?.longitude ?? -78.11743;
 
     return _mockMessages.map((msg) {
       if (msg.latitude == null || msg.longitude == null) {
@@ -113,8 +113,8 @@ class MockChatRepository implements ChatRepository {
     if (message.senderId.startsWith('new_user_') || message.senderId == 'vecino_123' || message.senderId.startsWith('vecino_')) {
       Timer(const Duration(seconds: 4), () async {
         final user = await MockAuthRepository().getCurrentUser();
-        final double baseLat = user?.latitude ?? -2.1432;
-        final double baseLng = user?.longitude ?? -79.9015;
+        final double baseLat = user?.latitude ?? 0.33201;
+        final double baseLng = user?.longitude ?? -78.11743;
 
         final reply = MessageEntity(
           id: 'reply_${DateTime.now().millisecondsSinceEpoch}',

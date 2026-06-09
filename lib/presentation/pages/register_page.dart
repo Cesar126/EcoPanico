@@ -18,8 +18,23 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _houseNumberController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _customCommunityController = TextEditingController();
 
   String? _selectedPhotoUrl;
+  String _selectedCommunity = 'Los Ceibos (Sector Central)';
+  bool _showCustomCommunityInput = false;
+
+  final List<String> _communities = [
+    'Los Ceibos (Sector Central)',
+    'Los Ceibos (Sector Polideportivo)',
+    'Los Ceibos (Sector Avenida)',
+    'Yacucalle',
+    'Caranqui',
+    'La Florida',
+    'La Victoria',
+    'El Retorno',
+    'Otro / Personalizado',
+  ];
 
   @override
   void dispose() {
@@ -29,6 +44,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     _houseNumberController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _customCommunityController.dispose();
     super.dispose();
   }
 
@@ -76,6 +92,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
+      final String finalCommunity = _selectedCommunity == 'Otro / Personalizado'
+          ? _customCommunityController.text.trim()
+          : _selectedCommunity;
+
       ref.read(authViewModelProvider.notifier).register(
             fullName: _nameController.text.trim(),
             phone: _phoneController.text.trim(),
@@ -84,6 +104,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             email: _emailController.text.trim(),
             password: _passwordController.text,
             photoUrl: _selectedPhotoUrl,
+            community: finalCommunity.isEmpty ? 'Los Ceibos' : finalCommunity,
           );
       
       // Navigate back on successful registration (the auth flow switch handles routing)
@@ -190,6 +211,40 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   decoration: _inputDecoration('Número de Casa o Lote', Icons.numbers_outlined),
                   validator: (value) => value == null || value.trim().isEmpty ? 'Ingresa el número de tu vivienda' : null,
                 ),
+                const SizedBox(height: 16),
+                // Comunidad / Barrio / Sector Selector
+                DropdownButtonFormField<String>(
+                  value: _selectedCommunity,
+                  style: const TextStyle(color: AppColors.textDark),
+                  dropdownColor: Colors.white,
+                  decoration: _inputDecoration('Comunidad / Barrio / Sector', Icons.group_outlined),
+                  items: _communities.map((comm) {
+                    return DropdownMenuItem<String>(
+                      value: comm,
+                      child: Text(comm),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCommunity = value ?? 'Los Ceibos (Sector Central)';
+                      _showCustomCommunityInput = _selectedCommunity == 'Otro / Personalizado';
+                    });
+                  },
+                ),
+                if (_showCustomCommunityInput) ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _customCommunityController,
+                    style: const TextStyle(color: AppColors.textDark),
+                    decoration: _inputDecoration('Especifica tu Comunidad / Barrio', Icons.edit_location_alt_outlined),
+                    validator: (value) {
+                      if (_showCustomCommunityInput && (value == null || value.trim().isEmpty)) {
+                        return 'Ingresa tu comunidad o barrio';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
                 const SizedBox(height: 16),
                 // Email
                 TextFormField(

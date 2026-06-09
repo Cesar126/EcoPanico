@@ -94,8 +94,8 @@ class ChatViewModel extends Notifier<ChatState> {
     final user = ref.read(authViewModelProvider).user;
     if (user == null) return;
 
-    double lat = -2.1432;
-    double lng = -79.9015;
+    double lat = 0.33201;
+    double lng = -78.11743;
 
     try {
       final position = await Geolocator.getCurrentPosition(
@@ -107,8 +107,8 @@ class ChatViewModel extends Notifier<ChatState> {
       lat = position.latitude;
       lng = position.longitude;
     } catch (_) {
-      lat = -2.1432 + (DateTime.now().second % 10) * 0.0001;
-      lng = -79.9015 - (DateTime.now().second % 10) * 0.0001;
+      lat = 0.33201 + (DateTime.now().second % 10) * 0.0001;
+      lng = -78.11743 - (DateTime.now().second % 10) * 0.0001;
     }
 
     final msg = MessageEntity(
