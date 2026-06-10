@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -31,7 +32,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     try {
       final XFile? media = isVideo 
           ? await _picker.pickVideo(source: ImageSource.gallery)
-          : await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+          : await _picker.pickImage(
+              source: ImageSource.gallery,
+              imageQuality: 40,
+              maxWidth: 800,
+              maxHeight: 800,
+            );
       
       if (media != null) {
         await ref.read(chatViewModelProvider.notifier).sendMediaFile(media.path, isVideo);
@@ -110,16 +116,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                         _pickAndSendMedia(false);
                       },
                     ),
-                    // Video attachment button
-                    _buildAttachmentBtn(
-                      icon: Icons.video_camera_back_outlined,
-                      label: 'Video Corto',
-                      color: AppColors.alert,
-                      onTap: () {
-                        Navigator.pop(context);
-                        _pickAndSendMedia(true);
-                      },
-                    ),
                   ],
                 ),
               ],
@@ -165,6 +161,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     ref.listen<ChatState>(chatViewModelProvider, (prev, next) {
       if (prev?.messages.length != next.messages.length) {
         _scrollToBottom();
+      }
+      if (next.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: AppColors.alert,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        ref.read(chatViewModelProvider.notifier).clearError();
       }
     });
 
@@ -278,14 +284,23 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                                       child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
                                     ),
                             )
-                          : Image.file(
-                              File(msg.photoUrl!),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => const SizedBox(
-                                height: 150,
-                                child: Center(child: Icon(Icons.broken_image, color: Colors.grey)),
-                              ),
-                            ),
+                          : msg.photoUrl!.startsWith('data:')
+                              ? Image.memory(
+                                  base64Decode(msg.photoUrl!.split(',').last),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => const SizedBox(
+                                    height: 150,
+                                    child: Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                                  ),
+                                )
+                              : Image.file(
+                                  File(msg.photoUrl!),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => const SizedBox(
+                                    height: 150,
+                                    child: Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                                  ),
+                                ),
                     ),
                     const SizedBox(height: 8),
                   ],

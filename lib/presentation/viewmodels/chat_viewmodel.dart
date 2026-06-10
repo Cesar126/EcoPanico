@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:uuid/uuid.dart';
@@ -155,7 +157,37 @@ class ChatViewModel extends Notifier<ChatState> {
       await ref.read(sendMessageUseCaseProvider).call(msg);
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(errorMessage: e.toString(), isLoading: false);
+      if (!isVideo) {
+        // Fallback for photos: if Firebase Storage upload fails, read image bytes,
+        // convert to Base64 data URL, and save to Firestore document database.
+        try {
+          final file = File(filePath);
+          final bytes = await file.readAsBytes();
+          final base64Image = base64Encode(bytes);
+          final dataUrl = 'data:image/jpeg;base64,$base64Image';
+
+          final msg = MessageEntity(
+            id: const Uuid().v4(),
+            senderId: user.id,
+            senderName: user.fullName,
+            messageText: '📷 Foto enviada (Base de Datos)',
+            timestamp: DateTime.now(),
+            photoUrl: dataUrl,
+            videoUrl: null,
+            latitude: user.latitude,
+            longitude: user.longitude,
+          );
+          await ref.read(sendMessageUseCaseProvider).call(msg);
+          state = state.copyWith(
+            isLoading: false,
+            errorMessage: 'La foto se subió directamente a la base de datos (Base64) porque falló el almacenamiento de archivos.',
+          );
+        } catch (firestoreError) {
+          state = state.copyWith(errorMessage: firestoreError.toString(), isLoading: false);
+        }
+      } else {
+        state = state.copyWith(errorMessage: e.toString(), isLoading: false);
+      }
     }
   }
 
